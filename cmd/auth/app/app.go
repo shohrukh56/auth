@@ -48,39 +48,6 @@ func (s *Server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	s.router.ServeHTTP(writer, request)
 }
 
-func (s *Server) handleCreateToken() http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		var body token.RequestDTO
-		err := rest.ReadJSONBody(request, &body)
-		if err != nil {
-			writer.WriteHeader(http.StatusBadRequest)
-			err := rest.WriteJSONBody(writer, &ErrorDTO{
-				[]string{"err.json_invalid"},
-			})
-			log.Print(err)
-			return
-		}
-
-		response, err := s.tokenSvc.Generate(request.Context(), &body, s.pool)
-
-		if err != nil {
-			writer.WriteHeader(http.StatusBadRequest)
-			err2 := rest.WriteJSONBody(writer, &ErrorDTO{
-				[]string{"err.password_mismatch", err.Error()},
-			})
-			if err2 != nil {
-				log.Print(err2)
-			}
-			return
-		}
-
-		err = rest.WriteJSONBody(writer, &response)
-		if err != nil {
-			log.Print(err)
-		}
-	}
-}
-
 func (s *Server) handleDeleteProfile() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		context, ok := mux.FromContext(request.Context(), "id")
@@ -122,6 +89,39 @@ func (s *Server) handleDeleteProfile() http.HandlerFunc {
 
 	}
 }
+func (s *Server) handleCreateToken() http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		var body token.RequestDTO
+		err := rest.ReadJSONBody(request, &body)
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			err := rest.WriteJSONBody(writer, &ErrorDTO{
+				[]string{"err.json_invalid"},
+			})
+			log.Print(err)
+			return
+		}
+
+		response, err := s.tokenSvc.Generate(request.Context(), &body, s.pool)
+
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			err2 := rest.WriteJSONBody(writer, &ErrorDTO{
+				[]string{"err.password_mismatch", err.Error()},
+			})
+			if err2 != nil {
+				log.Print(err2)
+			}
+			return
+		}
+
+		err = rest.WriteJSONBody(writer, &response)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+}
+
 
 func (s *Server) handleIndex() http.HandlerFunc {
 
@@ -136,8 +136,6 @@ func (s *Server) handleIndex() http.HandlerFunc {
 		panic(err)
 	}
 	return func(writer http.ResponseWriter, request *http.Request) {
-		// executes in many goroutines
-		// TODO: fetch data from multiple upstream services
 		err = tpl.Execute(writer, struct{ Title string }{Title: "auth",})
 		if err != nil {
 			log.Printf("error while executing template %s %v", tpl.Name(), err)
@@ -145,32 +143,6 @@ func (s *Server) handleIndex() http.HandlerFunc {
 	}
 
 }
-//
-//func (s *Server) handleRegister() http.HandlerFunc {
-//	return func(writer http.ResponseWriter, request *http.Request) {
-//		get := request.Header.Get("Content-Type")
-//		fmt.Println(get)
-//		if get != "application/json" {
-//			http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-//			return
-//		}
-//
-//		var newUser token.RequestDTO
-//
-//		err := rest.ReadJSONBody(request, &newUser)
-//		if err != nil {
-//			http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-//			return
-//		}
-//		err = s.userSvc.RegisterUser(request.Context(), newUser, s.pool)
-//		if err != nil {
-//			writer.Write([]byte(err.Error()))
-//			return
-//		}
-//		writer.Write([]byte("done!"))
-//
-//	}
-//}
 
 func (s *Server) handleProfile() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
