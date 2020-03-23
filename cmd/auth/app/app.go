@@ -138,7 +138,7 @@ func (s *Server) handleIndex() http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		// executes in many goroutines
 		// TODO: fetch data from multiple upstream services
-		err = tpl.Execute(writer, struct{ Title string }{Title: "Auth Service",})
+		err = tpl.Execute(writer, struct{ Title string }{Title: "auth",})
 		if err != nil {
 			log.Printf("error while executing template %s %v", tpl.Name(), err)
 		}
