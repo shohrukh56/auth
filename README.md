@@ -1,1 +1,1 @@
-https://auth-servisss.herokuapp.com/
+https://auth-book.herokuapp.com/
